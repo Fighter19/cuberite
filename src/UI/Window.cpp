@@ -743,6 +743,25 @@ void cWindow::BroadcastWholeWindow(void)
 	}  // for itr - m_OpenedBy[]
 }
 
+std::string* cWindow::ConvertToNetwork(cItem & a_Item)
+{
+	/*
+	itemType = ntohs(a_Item.m_ItemType);
+	itemCount = a_Item.m_ItemCount;
+	itemMeta = ntohs(a_Item.m_ItemDamage);
+	padding = 0x00;
+	*/
+	std::string* netstring = new std::string();
+	auto tempType = ntohs(a_Item.m_ItemType);
+	auto tempDamage = ntohs(a_Item.m_ItemDamage);
+	netstring->append((const char*) &tempType, sizeof(a_Item.m_ItemType));
+	netstring->append((const char*) &a_Item.m_ItemCount, sizeof(a_Item.m_ItemCount));
+	netstring->append((const char*) &tempDamage, sizeof(a_Item.m_ItemDamage));
+	netstring->append(1, 0x00);
+
+	return netstring;
+}
+
 
 
 
@@ -766,5 +785,87 @@ void cWindow::SetProperty(short a_Property, short a_Value, cPlayer & a_Player)
 }
 
 
+void cWindow::SendItemList(cClientHandle & a_Client)
+{
+
+	std::string message;
+	std::string * leftitem2string = nullptr;
+
+	if (this->m_Trade->GetLeftItems()->Size() <= 0)
+	{
+		LOGWARNING("No trade has been send because there are no items on the left side.");
+		return;
+	}
+	if (this->m_Trade->GetRightItem() == nullptr)
+	{
+		LOGWARNING("No trade has been send because there is no item on the right side.");
+		return;
+	}
+
+	Byte bytes[5] = { 0x00, 0x00, 0x00, this->GetWindowID(), 0x01 };
+	Byte bytet[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 7 };
+	message.append((const char*)bytes, 5);
+	std::string * rightitemstring = ConvertToNetwork(*this->m_Trade->GetRightItem());
+	std::string * leftitemstring = ConvertToNetwork(*this->m_Trade->GetLeftItems()->Get(0));
+	if (this->m_Trade->GetLeftItems()->Get(1) != nullptr) // If there is a second item on the left side.
+		leftitem2string = ConvertToNetwork(*this->m_Trade->GetLeftItems()->Get(1));
+	message.append((leftitemstring->c_str()), 6); //Hardcoded a value of 6 bytes because it will only work with that anyway.
+	message.append((rightitemstring->c_str()), 6);
+	if (leftitem2string != nullptr)
+	{
+		message.append(1, 1);
+		message.append((leftitem2string->c_str()), 6);
+	}
+	else
+	{
+		message.append(1, 0);
+	}
+	message.append((const char*)bytet, 9);
+
+	a_Client.SendPluginMessage("MC|TrList", message);
+}
+
+void cWindow::SetTrade(const cTrade & a_Trade)
+{
+	m_Trade = new cTrade(a_Trade);
+}
 
 
+
+cTrade::cTrade(cItems* leftItems, cItem* rightItem)
+{
+}
+
+cTrade::cTrade()
+{
+	m_leftItems = new cItems();
+	m_rightItem = new cItem();
+}
+
+void cTrade::AddItemToRight(const cItem & a_Item)
+{
+	m_rightItem = new cItem(a_Item);
+	LOG("Added item to the right slot");
+}
+
+void cTrade::AddItemToLeft(const cItem & a_Item)
+{
+	m_leftItems->Add(a_Item);
+	if (m_leftItems->Size() > 2)
+		LOGWARNING("%s: Added more items than there should be", __FUNCTION__);
+}
+
+void cTrade::SetItemsToLeft(const cItems & a_Items)
+{
+	m_leftItems = new cItems(a_Items);
+}
+
+cItems * cTrade::GetLeftItems() const
+{
+	return m_leftItems;
+}
+
+cItem * cTrade::GetRightItem() const
+{
+	return m_rightItem;
+}

@@ -33,6 +33,30 @@ typedef std::list<cPlayer *> cPlayerList;
 typedef std::vector<cSlotArea *> cSlotAreas;
 
 
+// tolua_begin
+class cTrade {
+	// tolua_end
+public:
+	cTrade(cItems* leftItems, cItem* rightItem);
+	// tolua_begin
+	cTrade();
+
+	void AddItemToRight(const cItem & a_Item);
+
+	void AddItemToLeft(const cItem & a_Item);
+
+	void SetItemsToLeft(const cItems & a_Items);
+
+	cItems* GetLeftItems() const;
+	cItem* GetRightItem() const;
+
+	// tolua_end
+
+protected:
+	cItems* m_leftItems;
+	cItem* m_rightItem;
+
+};// tolua_export
 
 
 
@@ -131,6 +155,9 @@ public:
 	/** Sends the contents of the whole window to all clients of this window. */
 	void BroadcastWholeWindow(void);
 
+	/** Converts cItem into string which can be attached to the Trade list*/
+	std::string* ConvertToNetwork(cItem & a_Item);
+
 	// tolua_begin
 
 	const AString & GetWindowTitle() const { return m_WindowTitle; }
@@ -141,6 +168,10 @@ public:
 
 	/** Sends the UpdateWindowPropert(0x69) packet to the specified player */
 	virtual void SetProperty(short a_Property, short a_Value, cPlayer & a_Player);
+
+	virtual void SendItemList(cClientHandle & a_Client);
+
+	virtual void SetTrade(const cTrade & a_Trade);
 
 	// tolua_end
 
@@ -187,6 +218,8 @@ protected:
 	cWindowOwner * m_Owner;
 
 	static Byte m_WindowIDCounter;
+
+	cTrade * m_Trade;
 
 	/** Sets the internal flag as "destroyed"; notifies the owner that the window is destroying */
 	virtual void Destroy(void);
