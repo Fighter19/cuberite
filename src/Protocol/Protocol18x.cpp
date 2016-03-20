@@ -1634,6 +1634,54 @@ void cProtocol180::SendWindowProperty(const cWindow & a_Window, short a_Property
 	Pkt.WriteBEInt16(a_Value);
 }
 
+void cProtocol180::SendTradeList(const cWindow & a_Window)
+{
+	const cTrade * Trade = a_Window.GetTrade();
+
+	if (Trade == nullptr)
+	{
+		LOGWARNING("Called %s, but no trade attached to window", __FUNCTION__);
+		return;
+	}
+	std::string message;
+	std::string * leftitem2string = nullptr;
+
+	cPlayer * Player = m_Client->GetPlayer();
+
+	if (Trade->GetLeftItems()->Size() <= 0)
+	{
+		LOGWARNING("No trade has been send because there are no items on the left side.");
+		return;
+	}
+	if (Trade->GetRightItem() == nullptr)
+	{
+		LOGWARNING("No trade has been send because there is no item on the right side.");
+		return;
+	}
+
+	Byte bytes[5] = { 0x00, 0x00, 0x00, a_Window.GetWindowID(), 0x01 };
+	Byte bytet[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 7 };
+	message.append((const char*)bytes, 5);
+	std::string * rightitemstring = a_Window.ConvertToNetwork(*Trade->GetRightItem());
+	std::string * leftitemstring = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(0));
+	if (Trade->GetLeftItems()->Get(1) != nullptr) // If there is a second item on the left side.
+		leftitem2string = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(1));
+	message.append((leftitemstring->c_str()), 6); //Hardcoded a value of 6 bytes because it will only work with that anyway.
+	message.append((rightitemstring->c_str()), 6);
+	if (leftitem2string != nullptr)
+	{
+		message.append(1, 1);
+		message.append((leftitem2string->c_str()), 6);
+	}
+	else
+	{
+		message.append(1, 0);
+	}
+	message.append((const char*)bytet, 9);
+
+	SendPluginMessage("MC|TrList", message);
+}
+
 
 
 

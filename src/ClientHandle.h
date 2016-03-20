@@ -226,6 +226,8 @@ public:  // tolua_export
 	void SendWindowOpen                 (const cWindow & a_Window);
 	void SendWindowProperty             (const cWindow & a_Window, short a_Property, short a_Value);
 
+	void SendTradeList(const cWindow & a_Window);
+
 	// tolua_begin
 	const AString & GetUsername(void) const;
 	void SetUsername( const AString & a_Username);

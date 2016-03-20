@@ -32,7 +32,8 @@ cWindow::cWindow(WindowType a_WindowType, const AString & a_WindowTitle) :
 	m_WindowType(a_WindowType),
 	m_WindowTitle(a_WindowTitle),
 	m_IsDestroyed(false),
-	m_Owner(nullptr)
+	m_Owner(nullptr),
+	m_Trade(nullptr)
 {
 	// The window ID is signed in protocol 1.7, unsigned in protocol 1.8. Keep out of trouble by using only 7 bits:
 	// Ref.: https://forum.cuberite.org/thread-1876.html
@@ -728,6 +729,8 @@ void cWindow::BroadcastSlot(cSlotArea * a_Area, int a_LocalSlotNum)
 void cWindow::SendWholeWindow(cClientHandle & a_Client)
 {
 	a_Client.SendWholeInventory(*this);
+	if (GetWindowType() == cWindow::wtNPCTrade)
+		a_Client.SendTradeList(*this);
 }
 
 
@@ -743,7 +746,7 @@ void cWindow::BroadcastWholeWindow(void)
 	}  // for itr - m_OpenedBy[]
 }
 
-std::string* cWindow::ConvertToNetwork(cItem & a_Item)
+std::string* cWindow::ConvertToNetwork(cItem & a_Item) const
 {
 	/*
 	itemType = ntohs(a_Item.m_ItemType);
@@ -785,45 +788,6 @@ void cWindow::SetProperty(short a_Property, short a_Value, cPlayer & a_Player)
 }
 
 
-void cWindow::SendItemList(cClientHandle & a_Client)
-{
-
-	std::string message;
-	std::string * leftitem2string = nullptr;
-
-	if (this->m_Trade->GetLeftItems()->Size() <= 0)
-	{
-		LOGWARNING("No trade has been send because there are no items on the left side.");
-		return;
-	}
-	if (this->m_Trade->GetRightItem() == nullptr)
-	{
-		LOGWARNING("No trade has been send because there is no item on the right side.");
-		return;
-	}
-
-	Byte bytes[5] = { 0x00, 0x00, 0x00, this->GetWindowID(), 0x01 };
-	Byte bytet[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 7 };
-	message.append((const char*)bytes, 5);
-	std::string * rightitemstring = ConvertToNetwork(*this->m_Trade->GetRightItem());
-	std::string * leftitemstring = ConvertToNetwork(*this->m_Trade->GetLeftItems()->Get(0));
-	if (this->m_Trade->GetLeftItems()->Get(1) != nullptr) // If there is a second item on the left side.
-		leftitem2string = ConvertToNetwork(*this->m_Trade->GetLeftItems()->Get(1));
-	message.append((leftitemstring->c_str()), 6); //Hardcoded a value of 6 bytes because it will only work with that anyway.
-	message.append((rightitemstring->c_str()), 6);
-	if (leftitem2string != nullptr)
-	{
-		message.append(1, 1);
-		message.append((leftitem2string->c_str()), 6);
-	}
-	else
-	{
-		message.append(1, 0);
-	}
-	message.append((const char*)bytet, 9);
-
-	a_Client.SendPluginMessage("MC|TrList", message);
-}
 
 void cWindow::SetTrade(const cTrade & a_Trade)
 {

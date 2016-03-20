@@ -366,6 +366,12 @@ void cProtocolRecognizer::SendWindowProperty(const cWindow & a_Window, short a_P
 	m_Protocol->SendWindowProperty(a_Window, a_Property, a_Value);
 }
 
+void cProtocolRecognizer::SendTradeList(const cWindow & a_Window)
+{
+	ASSERT(m_Protocol != nullptr);
+	m_Protocol->SendTradeList(a_Window);
+}
+
 
 
 

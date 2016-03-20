@@ -1543,6 +1543,13 @@ void cProtocol172::SendWindowProperty(const cWindow & a_Window, short a_Property
 
 
 
+void cProtocol172::SendTradeList(const cWindow & a_Window)
+{
+}
+
+
+
+
 
 void cProtocol172::AddReceivedData(const char * a_Data, size_t a_Size)
 {

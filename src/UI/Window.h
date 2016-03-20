@@ -156,7 +156,7 @@ public:
 	void BroadcastWholeWindow(void);
 
 	/** Converts cItem into string which can be attached to the Trade list*/
-	std::string* ConvertToNetwork(cItem & a_Item);
+	std::string* ConvertToNetwork(cItem & a_Item) const;
 
 	// tolua_begin
 
@@ -169,9 +169,10 @@ public:
 	/** Sends the UpdateWindowPropert(0x69) packet to the specified player */
 	virtual void SetProperty(short a_Property, short a_Value, cPlayer & a_Player);
 
-	virtual void SendItemList(cClientHandle & a_Client);
 
 	virtual void SetTrade(const cTrade & a_Trade);
+
+	const cTrade * GetTrade() const { return m_Trade; }
 
 	// tolua_end
 

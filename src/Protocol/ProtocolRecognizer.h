@@ -128,6 +128,7 @@ public:
 	virtual void SendWindowClose                (const cWindow & a_Window) override;
 	virtual void SendWindowOpen                 (const cWindow & a_Window) override;
 	virtual void SendWindowProperty             (const cWindow & a_Window, short a_Property, short a_Value) override;
+	virtual void SendTradeList(const cWindow & a_Window) override;
 
 	virtual AString GetAuthServerID(void) override;
 

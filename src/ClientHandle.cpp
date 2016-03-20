@@ -2912,6 +2912,15 @@ void cClientHandle::SendWindowProperty(const cWindow & a_Window, short a_Propert
 
 
 
+void cClientHandle::SendTradeList(const cWindow & a_Window)
+{
+	m_Protocol->SendTradeList(a_Window);
+}
+
+
+
+
+
 const AString & cClientHandle::GetUsername(void) const
 {
 	return m_Username;
