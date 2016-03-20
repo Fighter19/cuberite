@@ -1674,19 +1674,19 @@ void cProtocol180::SendTradeList(const cWindow & a_Window)
 
 	AString * rightitemstring = a_Window.ConvertToNetwork(*Trade->GetRightItem());
 	AString * leftitemstring = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(0));
-	if (Trade->GetLeftItems()->Get(1) != nullptr) // If there is a second item on the left side.
+	if (Trade->GetLeftItems()->Size() > 1) // If there is a second item on the left side.
 		leftitem2string = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(1));
 
 	Pkt.WriteBuf((leftitemstring->c_str()), 6);
 	Pkt.WriteBuf((rightitemstring->c_str()), 6);
 	if (leftitem2string != nullptr)
 	{
-		Pkt.WriteBEUInt8(0x01);
+		Pkt.WriteBool(true);
 		Pkt.WriteBuf((leftitem2string->c_str()), 6);
 	}
 	else
 	{
-		Pkt.WriteBEUInt8(0x00);
+		Pkt.WriteBool(false);
 	}
 	Pkt.WriteBEUInt32(0);
 	Pkt.WriteBuf("\x00\x00\x00\x00\x07", 5);
