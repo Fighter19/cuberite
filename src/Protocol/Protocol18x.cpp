@@ -1636,6 +1636,14 @@ void cProtocol180::SendWindowProperty(const cWindow & a_Window, short a_Property
 
 void cProtocol180::SendTradeList(const cWindow & a_Window)
 {
+	ASSERT(m_State == 3);  // In game mode?
+
+	cPacketizer Pkt(*this, 0x3f);
+	Pkt.WriteString("MC|TrList");
+
+
+
+
 	const cTrade * Trade = a_Window.GetTrade();
 
 	if (Trade == nullptr)
@@ -1643,8 +1651,9 @@ void cProtocol180::SendTradeList(const cWindow & a_Window)
 		LOGWARNING("Called %s, but no trade attached to window", __FUNCTION__);
 		return;
 	}
-	std::string message;
-	std::string * leftitem2string = nullptr;
+
+
+	AString * leftitem2string = nullptr;
 
 	cPlayer * Player = m_Client->GetPlayer();
 
@@ -1659,27 +1668,28 @@ void cProtocol180::SendTradeList(const cWindow & a_Window)
 		return;
 	}
 
-	Byte bytes[5] = { 0x00, 0x00, 0x00, a_Window.GetWindowID(), 0x01 };
-	Byte bytet[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 7 };
-	message.append((const char*)bytes, 5);
-	std::string * rightitemstring = a_Window.ConvertToNetwork(*Trade->GetRightItem());
-	std::string * leftitemstring = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(0));
+	Pkt.WriteBEUInt32(a_Window.GetWindowID());
+
+	Pkt.WriteBEUInt8(0x01);
+
+	AString * rightitemstring = a_Window.ConvertToNetwork(*Trade->GetRightItem());
+	AString * leftitemstring = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(0));
 	if (Trade->GetLeftItems()->Get(1) != nullptr) // If there is a second item on the left side.
 		leftitem2string = a_Window.ConvertToNetwork(*Trade->GetLeftItems()->Get(1));
-	message.append((leftitemstring->c_str()), 6); //Hardcoded a value of 6 bytes because it will only work with that anyway.
-	message.append((rightitemstring->c_str()), 6);
+
+	Pkt.WriteBuf((leftitemstring->c_str()), 6);
+	Pkt.WriteBuf((rightitemstring->c_str()), 6);
 	if (leftitem2string != nullptr)
 	{
-		message.append(1, 1);
-		message.append((leftitem2string->c_str()), 6);
+		Pkt.WriteBEUInt8(0x01);
+		Pkt.WriteBuf((leftitem2string->c_str()), 6);
 	}
 	else
 	{
-		message.append(1, 0);
+		Pkt.WriteBEUInt8(0x00);
 	}
-	message.append((const char*)bytet, 9);
-
-	SendPluginMessage("MC|TrList", message);
+	Pkt.WriteBEUInt32(0);
+	Pkt.WriteBuf("\x00\x00\x00\x00\x07", 5);
 }
 
 
